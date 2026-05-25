@@ -27,6 +27,14 @@ DEFAULT_SCOPES = (
     "accounting.payments "
     "accounting.banktransactions "
     "accounting.manualjournals "
+    "accounting.reports.aged.read "
+    "accounting.reports.balancesheet.read "
+    "accounting.reports.banksummary.read "
+    "accounting.reports.budgetsummary.read "
+    "accounting.reports.executivesummary.read "
+    "accounting.reports.profitandloss.read "
+    "accounting.reports.trialbalance.read "
+    "accounting.reports.taxreports.read "
     "offline_access"
 )
 SCOPES = os.getenv("XERO_SCOPES", DEFAULT_SCOPES)
