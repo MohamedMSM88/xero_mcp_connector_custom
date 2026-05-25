@@ -12,7 +12,7 @@ import os
 import time
 import psycopg
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # We only ever store ONE row (single Xero org connection).
 # id is fixed to 1 so upserts overwrite the same row every time.
@@ -21,6 +21,10 @@ _ROW_ID = 1
 
 def init_db() -> None:
     """Create the xero_tokens table if it does not exist. Safe to call on every boot."""
+    if not DATABASE_URL:
+        # Allow the service to boot so Render can show logs/health; endpoints that
+        # require persistence will fail with a clear error.
+        return
     with psycopg.connect(DATABASE_URL) as conn:
         conn.execute(
             """
@@ -40,6 +44,8 @@ def init_db() -> None:
 def save_tokens(access_token: str, refresh_token: str, expires_in: int,
                 tenant_id: str | None = None) -> None:
     """Persist tokens. expires_in is seconds-from-now (Xero gives 1800)."""
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not set. Configure it in your environment (Render env vars).")
     expires_at = int(time.time()) + int(expires_in)
     with psycopg.connect(DATABASE_URL) as conn:
         if tenant_id is not None:
@@ -75,6 +81,8 @@ def save_tokens(access_token: str, refresh_token: str, expires_in: int,
 
 def load_tokens() -> dict | None:
     """Return the stored token row as a dict, or None if not yet authorized."""
+    if not DATABASE_URL:
+        return None
     with psycopg.connect(DATABASE_URL) as conn:
         row = conn.execute(
             "SELECT access_token, refresh_token, expires_at, tenant_id FROM xero_tokens WHERE id = %s",
