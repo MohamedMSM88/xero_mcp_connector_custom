@@ -19,7 +19,9 @@ from pathlib import Path
 import psycopg
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-TOKEN_STORE_PATH = os.getenv("TOKEN_STORE_PATH", "xero_tokens.json")
+_IS_RENDER = any(os.getenv(k) for k in ("RENDER", "RENDER_SERVICE_ID", "RENDER_EXTERNAL_HOSTNAME"))
+_DEFAULT_TOKEN_STORE_PATH = "/tmp/xero_tokens.json" if _IS_RENDER else "xero_tokens.json"
+TOKEN_STORE_PATH = os.getenv("TOKEN_STORE_PATH", _DEFAULT_TOKEN_STORE_PATH)
 
 # We only ever store ONE row (single Xero org connection).
 # id is fixed to 1 so upserts overwrite the same row every time.

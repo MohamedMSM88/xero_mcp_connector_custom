@@ -16,8 +16,9 @@ import secrets
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 
-from token_store import init_db, load_tokens
+from token_store import init_db, load_tokens, DATABASE_URL, TOKEN_STORE_PATH
 from xero_client import build_authorize_url, exchange_code
+from xero_client import missing_env_vars
 from tools import TOOLS, call_tool
 
 app = FastAPI(title="Xero MCP Connector")
@@ -34,7 +35,16 @@ def _startup():
 @app.get("/")
 def health():
     authorized = load_tokens() is not None
-    return {"status": "ok", "authorized": authorized}
+    missing = missing_env_vars()
+    storage = "postgres" if DATABASE_URL else "file"
+    return {
+        "status": "ok",
+        "authorized": authorized,
+        "xeroConfigured": len(missing) == 0,
+        "missingEnv": missing,
+        "tokenStorage": storage,
+        "tokenStorePath": TOKEN_STORE_PATH if storage == "file" else None,
+    }
 
 
 @app.get("/connect")

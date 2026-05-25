@@ -33,7 +33,7 @@ TOKEN_URL = "https://identity.xero.com/connect/token"
 CONNECTIONS_URL = "https://api.xero.com/connections"
 API_BASE = "https://api.xero.com/api.xro/2.0"
 
-def _require_env() -> tuple[str, str, str]:
+def missing_env_vars() -> list[str]:
     missing = []
     if not CLIENT_ID:
         missing.append("XERO_CLIENT_ID")
@@ -41,6 +41,10 @@ def _require_env() -> tuple[str, str, str]:
         missing.append("XERO_CLIENT_SECRET")
     if not REDIRECT_URI:
         missing.append("XERO_REDIRECT_URI")
+    return missing
+
+def _require_env() -> tuple[str, str, str]:
+    missing = missing_env_vars()
     if missing:
         raise RuntimeError(
             "Missing required env var(s): "
