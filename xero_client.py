@@ -19,7 +19,7 @@ REDIRECT_URI = os.getenv("XERO_REDIRECT_URI")
 # NOTE: Xero manual journals are READ-ONLY in the public API — there is a
 # .read scope but no general write endpoint. We include the read scope for
 # visibility; "posting a journal" is done via bank transactions instead.
-SCOPES = (
+DEFAULT_SCOPES = (
     "openid profile email "
     "accounting.settings "
     "accounting.contacts "
@@ -27,8 +27,11 @@ SCOPES = (
     "accounting.payments "
     "accounting.banktransactions "
     "accounting.manualjournals "
+    "accounting.attachments "
+    "accounting.reports.read "
     "offline_access"
 )
+SCOPES = os.getenv("XERO_SCOPES", DEFAULT_SCOPES)
 
 AUTH_URL = "https://login.xero.com/identity/connect/authorize"
 TOKEN_URL = "https://identity.xero.com/connect/token"
