@@ -11,9 +11,9 @@ import httpx
 
 from token_store import load_tokens, save_tokens
 
-CLIENT_ID = os.environ["XERO_CLIENT_ID"]
-CLIENT_SECRET = os.environ["XERO_CLIENT_SECRET"]
-REDIRECT_URI = os.environ["XERO_REDIRECT_URI"]
+CLIENT_ID = os.getenv("XERO_CLIENT_ID")
+CLIENT_SECRET = os.getenv("XERO_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("XERO_REDIRECT_URI")
 
 # Full read+write scopes for the resources requested.
 # NOTE: Xero manual journals are READ-ONLY in the public API — there is a
@@ -33,13 +33,30 @@ TOKEN_URL = "https://identity.xero.com/connect/token"
 CONNECTIONS_URL = "https://api.xero.com/connections"
 API_BASE = "https://api.xero.com/api.xro/2.0"
 
+def _require_env() -> tuple[str, str, str]:
+    missing = []
+    if not CLIENT_ID:
+        missing.append("XERO_CLIENT_ID")
+    if not CLIENT_SECRET:
+        missing.append("XERO_CLIENT_SECRET")
+    if not REDIRECT_URI:
+        missing.append("XERO_REDIRECT_URI")
+    if missing:
+        raise RuntimeError(
+            "Missing required env var(s): "
+            + ", ".join(missing)
+            + ". Configure them in your environment (Render env vars) before using /connect."
+        )
+    return CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
+
 
 def build_authorize_url(state: str) -> str:
+    client_id, _, redirect_uri = _require_env()
     from urllib.parse import urlencode
     params = {
         "response_type": "code",
-        "client_id": CLIENT_ID,
-        "redirect_uri": REDIRECT_URI,
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
         "scope": SCOPES,
         "state": state,
     }
@@ -47,12 +64,14 @@ def build_authorize_url(state: str) -> str:
 
 
 def _basic_auth_header() -> str:
-    raw = f"{CLIENT_ID}:{CLIENT_SECRET}".encode()
+    client_id, client_secret, _ = _require_env()
+    raw = f"{client_id}:{client_secret}".encode()
     return "Basic " + base64.b64encode(raw).decode()
 
 
 async def exchange_code(code: str) -> dict:
     """Exchange the authorization code for tokens, then fetch and store the tenant_id."""
+    _, _, redirect_uri = _require_env()
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
             TOKEN_URL,
@@ -63,7 +82,7 @@ async def exchange_code(code: str) -> dict:
             data={
                 "grant_type": "authorization_code",
                 "code": code,
-                "redirect_uri": REDIRECT_URI,
+                "redirect_uri": redirect_uri,
             },
         )
         resp.raise_for_status()
