@@ -17,7 +17,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 
 from token_store import init_db, load_tokens, DATABASE_URL, TOKEN_STORE_PATH
-from xero_client import build_authorize_url, exchange_code
+from xero_client import build_authorize_url, exchange_code, SCOPES
 from xero_client import missing_env_vars
 from tools import TOOLS, call_tool
 
@@ -42,6 +42,7 @@ def health():
         "authorized": authorized,
         "xeroConfigured": len(missing) == 0,
         "missingEnv": missing,
+        "xeroScopes": SCOPES,
         "tokenStorage": storage,
         "tokenStorePath": TOKEN_STORE_PATH if storage == "file" else None,
     }

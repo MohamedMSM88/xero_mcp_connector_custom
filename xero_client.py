@@ -27,8 +27,6 @@ DEFAULT_SCOPES = (
     "accounting.payments "
     "accounting.banktransactions "
     "accounting.manualjournals "
-    "accounting.attachments "
-    "accounting.reports.read "
     "offline_access"
 )
 SCOPES = os.getenv("XERO_SCOPES", DEFAULT_SCOPES)
