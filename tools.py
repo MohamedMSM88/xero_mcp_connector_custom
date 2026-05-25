@@ -4,7 +4,7 @@ MCP tool definitions and their handlers.
 READ tools:  list_contacts, list_invoices, get_organisation, list_accounts
 WRITE tools: create_contact, create_invoice, create_payment, create_bank_transaction
 
-Manual journals are intentionally NOT writable (Xero public API limitation);
+Manual journals are intentionally NOT writable by this connector;
 list_journals is provided read-only for visibility.
 """
 from xero_client import api_request
@@ -44,7 +44,7 @@ TOOLS = [
     },
     {
         "name": "list_journals",
-        "description": "List manual journals (READ ONLY — Xero does not allow creating journals via the public API).",
+        "description": "List manual journals (read-only in this connector).",
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
@@ -195,9 +195,16 @@ async def call_tool(name: str, args: dict) -> str:
         return "\n".join(lines) if lines else "No accounts found."
 
     if name == "list_journals":
-        data = await api_request("GET", "/Journals")
-        journals = data.get("Journals", [])
-        return f"{len(journals)} journals found (read-only)." if journals else "No journals found."
+        data = await api_request("GET", "/ManualJournals")
+        journals = data.get("ManualJournals", [])
+        if not journals:
+            return "No manual journals found."
+        lines = [
+            f'- {j.get("Narration") or "(no narration)"} | {j.get("Total")} {j.get("CurrencyCode")} | '
+            f'{j.get("Status")} [{j.get("ManualJournalID")}]'
+            for j in journals[:50]
+        ]
+        return "\n".join(lines)
 
     if name == "create_contact":
         body = {"Contacts": [{"Name": args["name"]}]}

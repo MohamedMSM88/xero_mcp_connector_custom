@@ -21,10 +21,12 @@ REDIRECT_URI = os.getenv("XERO_REDIRECT_URI")
 # visibility; "posting a journal" is done via bank transactions instead.
 SCOPES = (
     "openid profile email "
-    "accounting.transactions "
-    "accounting.contacts "
-    "accounting.journals.read "
     "accounting.settings "
+    "accounting.contacts "
+    "accounting.invoices "
+    "accounting.payments "
+    "accounting.banktransactions "
+    "accounting.manualjournals "
     "offline_access"
 )
 
