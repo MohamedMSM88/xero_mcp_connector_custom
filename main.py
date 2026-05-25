@@ -87,6 +87,16 @@ def _rpc_error(req_id, code, message):
 
 @app.post("/mcp")
 async def mcp(request: Request):
+    return await _handle_mcp(request)
+
+
+@app.post("/")
+async def mcp_root(request: Request):
+    # Some clients expect the MCP endpoint to be the server root URL.
+    return await _handle_mcp(request)
+
+
+async def _handle_mcp(request: Request):
     body = await request.json()
     method = body.get("method")
     req_id = body.get("id")
